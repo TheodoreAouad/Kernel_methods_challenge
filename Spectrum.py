@@ -9,6 +9,23 @@ class spectrum(kernel.Kernel):
             self.N = None
             self.pre_index = None
 
+    def __call__(self,x,y):
+        '''Computes the dot product of the embeddings of x and y.
+        Input: x,y two strings.
+        Output: k(x,y)'''
+        pre_index = {}
+        res = 0
+        for j in range(len(x)-self.K):
+            subseq = x[j:j+self.K]
+            if subseq in pre_index.keys():
+                pre_index[subseq] += 1
+            else:
+                pre_index[subseq] = 1
+        for j in range(len(y)-self.K):
+            subseq = y[j:j+self.K]
+            res += pre_index.get(subseq,0)
+        return res    
+            
     def compute_pre_index(self, X):
         self.N = X.shape[0]
         self.Graam = np.zeros((self.N,self.N))

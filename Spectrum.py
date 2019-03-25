@@ -1,12 +1,13 @@
 import numpy as np
+import kernel
 
-class spectrum():
+class spectrum(kernel.Kernel):
 
     def __init__(self, k = 3):
+            super().__init__()
             self.K = k
             self.N = None
             self.pre_index = None
-            self.Graam = None
 
     def compute_pre_index(self, X):
         self.N = X.shape[0]
@@ -30,7 +31,7 @@ class spectrum():
         for sub_seq in self.pre_index:
             V = self.pre_index[sub_seq]
             self.Graam += np.outer(V,V)
-        return True
+        return self.Graam
 
     def compute_embedding(self, Xtest):
         n = Xtest.shape[0]
@@ -41,10 +42,5 @@ class spectrum():
             for j in range(l-self.K):
                 subseq = seq[j:j+self.K]
                 Mat[i] += self.pre_index[subseq]
+        self.Embedding_test = Mat
         return Mat
-
-
-# X= Xtr0
-# n = Xtr0.shape[0]
-# k = 3
-#

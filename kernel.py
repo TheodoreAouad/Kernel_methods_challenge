@@ -35,7 +35,6 @@ class Kernel(ABC):
         if not os.path.exists(filepath + 'GR' ):
             if not os.path.exists(filepath + 'EM'):
                 np.save(filepath + 'GR', self.Graam)
-                print(self.Embedding_test)
                 np.save(filepath + 'EM', self.Embedding_test)
                 return True
             else :

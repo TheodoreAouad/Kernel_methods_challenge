@@ -41,6 +41,6 @@ class spectrum(kernel.Kernel):
             l = len(seq)
             for j in range(l-self.K):
                 subseq = seq[j:j+self.K]
-                Mat[i] += self.pre_index[subseq]
+                Mat[i] += self.pre_index.get(subseq,0)
         self.Embedding_test = Mat
         return Mat

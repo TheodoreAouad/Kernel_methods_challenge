@@ -28,10 +28,15 @@ class Kernel(ABC):
         if not os.path.exists("graam_matrices/"):
             os.mkdir("graam_matrices/")
         filepath = "graam_matrices/" + filename
+        if self.Graam is None:
+            print("Matrice de Graam non calculée")
+        if self.Embedding_test is None :
+            print("Embedding du test non calculé")
         if not os.path.exists(filepath + 'GR' ):
             if not os.path.exists(filepath + 'EM'):
-                np.savetxt(filepath + 'GR', self.Graam)
-                np.savetxt(filepath + 'EM', self.Embedding_test)
+                np.save(filepath + 'GR', self.Graam)
+                print(self.Embedding_test)
+                np.save(filepath + 'EM', self.Embedding_test)
                 return True
             else :
                 print(filepath + 'EM' +  " already exists" )

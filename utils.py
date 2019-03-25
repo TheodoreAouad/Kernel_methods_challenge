@@ -12,3 +12,6 @@ def train_val_split(X,y, p=0.1):
     Xval = X[-sep:]
     yval = y[-sep:]
     return Xtr, ytr, Xval, yval
+
+def accuracy(ytrue, ypred):
+    return np.sum(ytrue==ypred)/ytrue.shape[0]

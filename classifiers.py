@@ -17,26 +17,29 @@ class KSVM():
 
 
 
-    def train(self, X, y, kernel, lbda):
+    def train(self, X, y, kernel, lbda, center = False):
         self.kernel = kernel
         self.data = X
 
         K = kernel(X,X)
-        self.Ktrain = K
-        self.train_fromK(K, y, lbda)
+        self.train_fromK(K, y, lbda, center = center)
         return True
 
-    def train_fromK(self, K, y, lbda):
+    def train_fromK(self, K, y, lbda, center = False):
         n = K.shape[0]
+        if center:
+            M = np.eye(n) - np.ones((n,n)) * 1/n
+            K = M@K@M
 
+        self.Ktrain = K
+        y = y.astype(float)
         P = matrix(K)
         q = matrix(-y)
         G = matrix( np.vstack([np.diag(y),-1*np.diag(y)]) )
         h = matrix( np.hstack([np.ones(n)*1/(2*n*lbda), np.zeros(n)]))
 
-        solution = solvers.qp(P, q, G, h)
+        solution = solvers.qp(P, q, G= G, h=h)
         self.compute_SV(solution)
-
         return True
 
 

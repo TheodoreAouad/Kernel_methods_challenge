@@ -39,6 +39,7 @@ class spectrum():
             seq = Xtest[i]
             l = len(seq)
             for j in range(l-self.K):
+                subseq = seq[j:j+self.K]
                 Mat[i] += self.pre_index[subseq]
         return Mat
 

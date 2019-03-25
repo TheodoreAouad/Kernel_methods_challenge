@@ -26,6 +26,9 @@ class spectrum():
         self.pre_index = pre_index
 
     def compute_Graam(self, X):
+        '''Compute the Gram Matrix of the training data.
+        Input: training data X, array of strings
+        Output: M[i,j] = K(train_i,train_j)'''
         self.compute_pre_index(X)
         for sub_seq in self.pre_index:
             V = self.pre_index[sub_seq]
@@ -33,6 +36,10 @@ class spectrum():
         return True
 
     def compute_embedding(self, Xtest):
+        '''Computes the kernel products between train and test.
+        Input: Array of strings.
+        Output: Matrix where M[i,j] = K(test_i,train_j)
+        '''
         n = Xtest.shape[0]
         Mat = np.zeros((n, self.N))
         for i in range(n):

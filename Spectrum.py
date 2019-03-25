@@ -3,7 +3,7 @@ import numpy as np
 class spectrum():
 
     def __init__(self, k = 3):
-            self.K = 3
+            self.K = k
             self.N = None
             self.pre_index = None
             self.Graam = None

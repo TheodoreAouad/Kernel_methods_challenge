@@ -13,7 +13,9 @@ from numba import jit
 data_path = "./data/"
 
 
-X = pd.read_csv(data_path + "Xte0.csv").values[:, 1]
+X = pd.read_csv(data_path + "Xtr0.csv").values[:, 1]
+
+
 
 
 class MismatchTree():
@@ -34,7 +36,7 @@ class MismatchTree():
             Root label, used for initialization during recursion
         children : dict, optional
             Dictionary of children ({root_label : child})
-        depth : int, optional 
+        depth : int, optional
             Depth of the node, used for initialization during recursion
         alphabet : str, optional
             Set of possible letters in the data
@@ -114,33 +116,60 @@ class MismatchTree():
             seq = str(row[j:(j+self.k)])
             self.add_sequence(seq, i, j)
 
+#    def compute_gram_matrix(self):
+#        """
+#        Compute the gram matrix of X
+#        """
+#        self.gram_matrix = self._aux_compute_gram_matrix(self.n)
+#        return self.gram_matrix
+#
+#    def _aux_compute_gram_matrix(self, n):
+#        """
+#        Auxiliary function used for recursion
+#        """
+#        if self.depth == self.k:
+#            return self._calc_gram_leaf(self.list_pointers, n)
+#        else:
+#            temp_gram = np.zeros((n, n), dtype=np.int32)
+#            for child in self.children.values():
+#                temp_gram += child._aux_compute_gram_matrix(n)
+#            return temp_gram
+#
+#    def _calc_gram_leaf(self, list_pointers, n):
+#        indicator = np.zeros((n, 1), dtype=np.int32)
+#        for elem in list_pointers:
+#            indicator[elem[0]] += 1
+#        return (indicator@indicator.T)
+    #@jit(nopython = True)
     def compute_gram_matrix(self):
-        """
-        Compute the gram matrix of X
-        """
-        self.gram_matrix = self._aux_compute_gram_matrix(self.n)
+        leaves_list = self._get_leaves_list()
+        self.embeddings = np.array(leaves_list, dtype = np.float32)[:, :, 0]
+        self.gram_matrix = self.embeddings.T@self.embeddings
+#        for i, ind in enumerate(leaves_list):
+#            if not(i%1000):
+#                print("{}/{}".format(i, len(leaves_list)))
+#            self.gram_matrix += ind@ind.T
         return self.gram_matrix
 
-    def _aux_compute_gram_matrix(self, n):
-        """
-        Auxiliary function used for recursion
-        """
+
+    def _get_leaves_list(self):
+        return self._aux_get_leaves_indicator(self.n)
+
+
+    def _aux_get_leaves_indicator(self, n):
         if self.depth == self.k:
-            return self._calc_gram_leaf(self.list_pointers, n)
+            indicator = np.zeros((n, 1), dtype=np.int8)
+            for elem in self.list_pointers:
+                indicator[elem[0]] += 1
+            return [indicator]
         else:
-            temp_gram = np.zeros((n, n), dtype=np.int32)
+            temp_list = []
             for child in self.children.values():
-                temp_gram += child._aux_compute_gram_matrix(n)
-            return temp_gram
-
-    def _calc_gram_leaf(self, list_pointers, n):
-        indicator = np.zeros((n, 1), dtype=np.int32)
-        for elem in list_pointers:
-            indicator[elem[0]] += 1
-        return (indicator@indicator.T)
+                temp_list += child._aux_get_leaves_indicator(n)
+            return temp_list
 
 
-def precalc_gram(path, k_list=list(range(1, 8)), m_list=[0, 1], sets=[0, 1, 2]):
+def precalc_gram(path, k_list=list(range(1,9)), m_list=[2], sets=[0, 1, 2]):
     for s in sets:
         Xtrain = pd.read_csv(data_path + "Xtr{}.csv".format(s)).values[:, 1]
         Xtest = pd.read_csv(data_path + "Xte{}.csv".format(s)).values[:, 1]
@@ -156,9 +185,11 @@ def precalc_gram(path, k_list=list(range(1, 8)), m_list=[0, 1], sets=[0, 1, 2]):
 
 
 # %%
-#tree = MismatchTree(k=3, m=0)
-# tree.fit(X)
-#G = tree.compute_gram_matrix()
+tree = MismatchTree(k=3, m=0)
+tree.fit(X)
+
+G = tree.compute_gram_matrix()
 
 # %%
-# precalc_gram("./gram_matrices")
+
+precalc_gram("./gram_matrices/mismatch")

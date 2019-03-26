@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 import os
 from numba import jit
+import time
 
-data_path = "./data/"
 
 
-X = pd.read_csv(data_path + "Xtr0.csv").values[:, 1]
+#X = pd.read_csv(data_path + "Xtr0.csv").values[:, 1]
 
 
 
@@ -110,40 +110,17 @@ class MismatchTree():
         Fit the tree on one row of data. Slices the data into sequence of k characters.
         """
         p = len(row)
-        if not(i % 100):
+        if not(i % 1000):
             print("Processing the row : {}".format(i))
         for j in range(p - self.k):
             seq = str(row[j:(j+self.k)])
             self.add_sequence(seq, i, j)
 
-#    def compute_gram_matrix(self):
-#        """
-#        Compute the gram matrix of X
-#        """
-#        self.gram_matrix = self._aux_compute_gram_matrix(self.n)
-#        return self.gram_matrix
-#
-#    def _aux_compute_gram_matrix(self, n):
-#        """
-#        Auxiliary function used for recursion
-#        """
-#        if self.depth == self.k:
-#            return self._calc_gram_leaf(self.list_pointers, n)
-#        else:
-#            temp_gram = np.zeros((n, n), dtype=np.int32)
-#            for child in self.children.values():
-#                temp_gram += child._aux_compute_gram_matrix(n)
-#            return temp_gram
-#
-#    def _calc_gram_leaf(self, list_pointers, n):
-#        indicator = np.zeros((n, 1), dtype=np.int32)
-#        for elem in list_pointers:
-#            indicator[elem[0]] += 1
-#        return (indicator@indicator.T)
     #@jit(nopython = True)
     def compute_gram_matrix(self):
         leaves_list = self._get_leaves_list()
         self.embeddings = np.array(leaves_list, dtype = np.float32)[:, :, 0]
+        print("Embedding space dimension : {}".format(self.embeddings.shape[0]))
         self.gram_matrix = self.embeddings.T@self.embeddings
 #        for i, ind in enumerate(leaves_list):
 #            if not(i%1000):
@@ -169,7 +146,8 @@ class MismatchTree():
             return temp_list
 
 
-def precalc_gram(path, k_list=list(range(1,9)), m_list=[2], sets=[0, 1, 2]):
+def precalc_gram(path, k_list, m_list, sets):
+    data_path = "./data/"
     for s in sets:
         Xtrain = pd.read_csv(data_path + "Xtr{}.csv".format(s)).values[:, 1]
         Xtest = pd.read_csv(data_path + "Xte{}.csv".format(s)).values[:, 1]
@@ -177,19 +155,24 @@ def precalc_gram(path, k_list=list(range(1,9)), m_list=[2], sets=[0, 1, 2]):
         for k in k_list:
             for m in m_list:
                 print(s, k, m)
-                tree = MismatchTree(k, m)
+                t0 = time.time()
+                tree = MismatchTree(k, m, label="", children={}, depth=0, alphabet="ATCG")
                 tree.fit(X)
+                print("Tree built in {:.3f}s ".format(time.time()-t0))
+                t0 = time.time()
                 name = "mismatch{}k@{}m@{}".format(s, k, m)
                 G = tree.compute_gram_matrix()
+                print("Gram matrix calculated in {:.3f}s ".format(time.time()-t0))
                 np.savez(os.path.join(path, name), G)
+                del(tree)
 
 
 # %%
-tree = MismatchTree(k=3, m=0)
-tree.fit(X)
+#tree = MismatchTree(k=3, m=0)
+#tree.fit(X)
 
-G = tree.compute_gram_matrix()
+#G = tree.compute_gram_matrix()
 
 # %%
 
-precalc_gram("./gram_matrices/mismatch")
+precalc_gram("./gram_matrices/mismatch", range(9, 11), [0, 1], [1])

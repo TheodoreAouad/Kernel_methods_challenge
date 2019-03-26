@@ -12,8 +12,8 @@ import numpy as np
 
 
 s = 0
-k = 8
-m = 0
+k = 7
+m = 2
 
 gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
 
@@ -39,7 +39,7 @@ def evaluateCV(y, n_folds = 5, n_reps = 1, lam = 0.1):
             scores[rep, fold] = 1-np.mean((ypred!=ytest))
     return scores, np.mean(scores)
 
-res = evaluateCV(y, n_folds = 5, n_reps = 1, lam=0.1)
+res = evaluateCV(y, n_folds = 5, n_reps = 1, lam=0.001)
 
 
 
@@ -84,5 +84,5 @@ def evaluateCVpool(y, k_list, n_folds = 5, n_reps = 1, lam = 0.1):
             scores[rep, fold] = 1-np.mean((ypred-ytest)**2)
     return scores, np.mean(scores)
 
-#r = evaluateCVpool(y, range(2,8), lam = 1)
+r = evaluateCVpool(y, range(1,9), lam = 0.1)
 

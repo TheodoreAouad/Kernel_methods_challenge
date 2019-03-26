@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 25 22:31:15 2019
 
-@author: Clément Barras, CentraleSupélec
-"""
 
 from classifiers import KSVM_revised, KSVM
 import pandas as pd

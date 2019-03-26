@@ -59,9 +59,10 @@ class KSVM:
     def train(self, Ktrain, ytrain):
         #setting the environment for cvxopt
         n = len(ytrain)
+        ytrain = ytrain.astype(float)
         P = matrix(Ktrain.astype(float))
-        q = matrix(-ytrain.astype(float))
-        G = matrix( np.vstack([np.diag(y),-1*np.diag(y)]) )
+        q = matrix(-ytrain)
+        G = matrix( np.vstack([np.diag(ytrain),-1*np.diag(ytrain)]) )
         h = matrix( np.hstack([np.ones(n)*1/(2*n*self.lam), np.zeros(n)]))
         solvers.options['show_progress'] = False
         solution = solvers.qp(P=P, q=q, G=G, h=h)
@@ -77,7 +78,3 @@ class KSVM:
             ypred = np.array(Kpred@self.alpha>0, dtype=int)
             ypred = ypred*2 - 1
             return ypred
-
-
-
-

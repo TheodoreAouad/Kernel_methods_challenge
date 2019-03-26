@@ -20,7 +20,7 @@ class kernel():
             self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
 
     def get_train(self, indxs):
-        return (self.gram_matrix[indices][:, indices], self.labels[indxs])
+        return (self.gram_matrix[indxs][:, indxs], self.labels[indxs])
 
     def get_valid(self, train_idxs, test_idxs):
         return (self.gram_matrix[test_idxs][:, train_idxs], self.labels[indxs])
@@ -30,7 +30,7 @@ class kernel():
         Returns the Graam matrix corresponding to the whole train test
         and the corresponding labels (in a tuple)
         """
-        return (self.gram_matrix[:2000, :2000], self.labels)
+        return (self.gram_matrix[:2000, :2000], self.labels[:2000])
 
     def get_test2000(self):
         """

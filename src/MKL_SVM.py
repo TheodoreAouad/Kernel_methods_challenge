@@ -53,5 +53,5 @@ class  MKL_SVM():
     def set_hperparameters(self, lam):
         pass
 
-    def predict(self):
-        pass
+    def predict(self, Kpred, return_float = False):
+        return self.KSVM.predict(Kpred,return_float)

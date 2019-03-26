@@ -25,7 +25,7 @@ def center_graam_matrix(K):
 
     """
     n = K.shape[0]
-    M = np.eye(n) + 1/n
+    M = np.eye(n) - 1/n
     return M@K@M
 
 def compute_squared_distance(self,K):

@@ -23,7 +23,7 @@ class kernel():
         return (self.gram_matrix[indxs][:, indxs], self.labels[indxs])
 
     def get_valid(self, train_idxs, test_idxs):
-        return (self.gram_matrix[test_idxs][:, train_idxs], self.labels[indxs])
+        return (self.gram_matrix[test_idxs][:, train_idxs], self.labels[test_idxs])
 
     def get_train2000(self):
         """

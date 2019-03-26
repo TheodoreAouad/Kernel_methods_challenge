@@ -44,9 +44,8 @@ class KNN():
 
 class KSVM:
 
-    def __init__(self, kernel, lam = 1):
+    def __init__(self, lam = 1):
         #self.type = 1 # Pour implementer plus tard le SVM2 avec la squared hinge loss
-        self.kernel = kernel
         self.alpha = None
         self.alpha_short = None
         self.support_vectors = None
@@ -57,8 +56,7 @@ class KSVM:
     def set_hyperparameters(self, lam):
         self.lam = lam
 
-    def train(self, indxs):
-        Ktrain, ytrain = self.kernel.get_train(indxs)
+    def train(self, Ktrain, ytrain):
         #setting the environment for cvxopt
         n = len(ytrain)
         P = matrix(Ktrain.astype(float))
@@ -72,8 +70,7 @@ class KSVM:
         self.alpha_short = self.alpha[self.support_vectors]
 
 
-    def predict(self, train_idxs, test_idxs, return_float = False):
-        Kpred, _ = self.kernel.get_valid(train_idxs, test_idxs)
+    def predict(self, Kpred, return_float = False):
         if return_float:
             return Kpred@self.alpha
         else:

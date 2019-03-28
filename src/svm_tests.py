@@ -5,21 +5,24 @@ from classifiers import KSVM
 from kernel import kernel
 import numpy as np
 from utils import evaluateCV
-
+from hp_opti import HPOptimizer
 
 
 s = 0
 k = 8
 m = 1
-gamma = None
+gamma = 2000
 lam = 1e-5
 
 K = kernel(s, k, m, gaussian = gamma)
 ksvm = KSVM(lam)
+optimizer = HPOptimizer(ksvm, K, bounds = [-6, -3])
+optimizer.explore(10, "GridSearch")
+
 
 #%%
 
-res = evaluateCV(ksvm, K, n_folds = 5, n_reps = 1)
+res = evaluateCV(ksvm, K, n_folds = 10, n_reps = 3)
 
 
 #%%

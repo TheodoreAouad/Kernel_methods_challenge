@@ -6,13 +6,14 @@ from utils import evaluateCV
 
 class HPOptimizer():
 
-    def __init__(self, model, K, n_folds=5, bounds = None):
+    def __init__(self, model, K, n_folds=10, n_reps = 3, bounds = None):
         if not(bounds):
             raise RuntimeError("HPOptimizer cannot be used with models without hyperparameter")
         np.warnings.filterwarnings('ignore')
         self.model = model
         self.K = K
         self.n_folds = n_folds
+        self.n_reps = n_reps
         self.bounds = np.array([bounds])
         self.hp_list = []
         self.score_list = []
@@ -22,19 +23,18 @@ class HPOptimizer():
     def __repr__(self):
         return """
         Number of HP explored : {}
-        Score function : {}
         Number of CV folds : {}
         Best HP : {}
         Best score : {}
         Tested HP : {}
         Corresponding scores : {}
-        """.format(len(self.score_list), self.score_function, self.n_folds, self.best_hp,
+        """.format(len(self.score_list), self.n_folds, self.best_hp,
                         self.best_score, self.hp_list, self.score_list)
 
     def evaluate_hp(self, hp):
         self.model.set_hyperparameters(10**hp[0])
         print("Current hp tested : {:.3e}".format(10**hp[0]))
-        score = evaluateCV(self.model, self.K, n_folds = self.n_folds, verbose = False)[1]
+        score = evaluateCV(self.model, self.K, n_folds = self.n_folds, n_reps = self.n_reps, n_reverbose = False)[1]
         return score
 
     def explore(self, n_iters=64, method='RandomSearch', n_pre_samples=1, alpha=1e-10):

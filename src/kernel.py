@@ -5,19 +5,23 @@ import pandas as pd
 
 class kernel():
 
-    def __init__(self, s, k, m, center = True, gaussian = None, normalize = True):
-        gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
-        self.labels = pd.read_csv("./data/Ytr{}.csv".format(s)).values[:, 1]*2-1
-        self.gram_matrix = np.load(gram_path)['arr_0']
-        #Gaussian combinaison
-        if gaussian  :
-            self.gram_matrix = u.compute_squared_distance(self.gram_matrix)
-            self.gram_matrix = np.exp(-1/(2*gaussian) * self.gram_matrix)
-        #Centering the data in the embedding space if required
-        if center :
-            self.gram_matrix = u.center_graam_matrix(self.gram_matrix)
-        if normalize :
-            self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
+    def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize = True, Graam_matrix=None):
+        if Graam_matrix:
+            self.graam_matrix = Graam_matrix
+        else :
+            gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
+            self.labels = pd.read_csv("./data/Ytr{}.csv".format(s)).values[:, 1]*2-1
+            self.gram_matrix = np.load(gram_path)['arr_0']
+            #Gaussian combinaison
+            if gaussian  :
+                self.gram_matrix = u.compute_squared_distance(self.gram_matrix)
+                self.gram_matrix = np.exp(-1/(2*gaussian) * self.gram_matrix)
+            #Centering the data in the embedding space if required
+            if center :
+                self.gram_matrix = u.center_graam_matrix(self.gram_matrix)
+            if normalize :
+                self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
+
 
     def get_train(self, indxs):
         return (self.gram_matrix[indxs][:, indxs], self.labels[indxs])

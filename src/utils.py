@@ -28,7 +28,7 @@ def center_graam_matrix(K):
     M = np.eye(n) - 1/n
     return M@K@M
 
-def compute_squared_distance(self,K):
+def compute_squared_distance(K):
     """Computes the squared distance matrix from the kernel matrix.
     Args:
         K (type): Description of parameter `K`.

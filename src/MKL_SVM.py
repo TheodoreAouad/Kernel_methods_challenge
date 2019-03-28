@@ -1,5 +1,6 @@
 import numpy as np
 from classifiers import KSVM
+import kernel as k
 
 class  MKL_SVM():
 
@@ -31,16 +32,22 @@ class  MKL_SVM():
             gamma_star = ksvm.alpha * 2 * self.lam /ytrain
             #Gradient step:
             gradient = np.array([-self.lam * gamma_star.T@K@gamma_star for K in Ktrain_list])
-            step = -step_size* gradient
-            print(gradient)
-            print(eta)
-            eta += step
-            if np.linalg.norm(step)<eps:
+            step = - step_size/self.lam**2 * gradient
+            eta_new = eta + step
+            #Projecting eta on L1 norm
+            eta_new= self.projection_L1(eta_new)
+            if np.linalg.norm(eta-eta_new)<eps:
                 converged = True
             #Projecting eta on L1 norm
-
+            eta= eta_new
+            print(eta)
         self.eta = eta
         self.KSVM = ksvm
+        K=0
+        for m in range(M):
+            K += Ktrain_list[m]*eta[m]
+        combKernel = k.kernel(Graam_matrix=K)
+        return comb_kernel
 
 
     def make_arguments(self, kernel_list, idxs):
@@ -51,7 +58,15 @@ class  MKL_SVM():
 
 
     def set_hperparameters(self, lam):
-        pass
+        print("Not implemented yet")
 
-    def predict(self, Kpred, return_float = False):
-        return self.KSVM.predict(Kpred,return_float)
+    def predict(self, return_float = False):
+        return self.KSVM.predict(Kpred, return_float)
+
+    def projection_L1(self, eta):
+        """" Returns the projection of eta on the L1 bowl
+        """
+        proj = np.sign(eta) * np.maximum(eta - (np.sum(np.abs(eta))-1)/len(eta), 0)
+        if np.sum(np.abs(proj)) > 1 + 1e-6:
+            proj[proj != 0] = self.projection_L1(proj[proj != 0])
+        return proj

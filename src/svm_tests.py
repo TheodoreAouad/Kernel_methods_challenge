@@ -1,42 +1,25 @@
 # -*- coding: utf-8 -*-
 
 
-from classifiers import KSVM_revised, KSVM
-import pandas as pd
+from classifiers import KSVM
+from kernel import kernel
 import numpy as np
+from utils import evaluateCV
 
 
 
 s = 0
 k = 7
 m = 2
+gamma = None
+lam = 1
 
-gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
+K = kernel(s, k, m, gaussian = gamma)
+ksvm = KSVM(lam)
 
-y = pd.read_csv("./data/Ytr{}.csv".format(s)).values[:, 1]
+#%%
 
-
-def evaluateCV(y, n_folds = 5, n_reps = 1, lam = 0.1):
-    n = len(y)
-    idxs = np.arange(n)
-    scores = np.zeros((n_reps, n_folds))
-    ksvm = KSVM_revised(lam)
-    ksvm.load_gram_matrix(gram_path, nlim = 2000)
-    for rep in range(n_reps):
-        np.random.shuffle(idxs)
-        for fold in range(n_folds):
-            print(fold)
-            test_idxs = idxs[fold*n//n_folds:(fold+1)*n//n_folds]
-            train_idxs = np.setdiff1d(idxs, test_idxs)
-            ytrain, ytest = y[train_idxs], y[test_idxs]
-            ytrain[ytrain == 0] = -1
-            ksvm.train(ytrain, train_idxs, center=0)
-            ypred = ksvm.predict(train_idxs, test_idxs)
-            scores[rep, fold] = 1-np.mean((ypred!=ytest))
-    return scores, np.mean(scores)
-
-res = evaluateCV(y, n_folds = 5, n_reps = 1, lam=0.001)
-
+res = evaluateCV(ksvm, K, n_folds = 5, n_reps = 1, lam=lam)
 
 
 #%%

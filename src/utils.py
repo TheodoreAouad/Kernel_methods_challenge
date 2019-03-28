@@ -37,3 +37,22 @@ def compute_squared_distance(K):
     """
     d = np.diag(K)[:,np.newaxis]
     return d + d.T - 2*K
+
+def evaluateCV(model, K, n_lim = 2000, n_folds = 5, n_reps = 1, lam = 0.1, verbose = True):
+    idxs = np.arange(n_lim)
+    scores = np.zeros((n_reps, n_folds))
+    for rep in range(n_reps):
+        np.random.shuffle(idxs)
+        for fold in range(n_folds):
+            if verbose:
+                print(f"Running cross validation, repetition: {rep+1}/{n_reps}, fold: {fold+1}/{n_folds}")
+            test_idxs = idxs[fold*n_lim//n_folds:(fold+1)*n_lim//n_folds]
+            train_idxs = np.setdiff1d(idxs, test_idxs)
+            Ktrain, ytrain = K.get_train(train_idxs)
+            Kval, yval = K.get_valid(train_idxs, test_idxs)
+            model.train(Ktrain, ytrain)
+            ypred = model.predict(Kval)
+            scores[rep, fold] = 1-np.mean((ypred!=yval))
+    if verbose:
+        print("Average score {:.3f}, std {:.3f}".format(np.mean(scores), np.std(scores)))
+    return scores, np.mean(scores)

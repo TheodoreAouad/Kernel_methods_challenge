@@ -1,6 +1,8 @@
 import numpy as np
 from classifiers import KSVM
 import kernel as k
+import utils as u
+import matplotlib.pyplot as plt
 
 class  MKL_SVM():
 
@@ -17,9 +19,14 @@ class  MKL_SVM():
     def set_hyperparameters(self, lam):
         self.lam = lam
 
-    def train(self, Ktrain_list, ytrain,  step_size=0.01 ,eps = 1e-3):
+    def train(self, Ktrain_list, ytrain,  step_size=0.01 ,eps = 1e-3, eta0=None):
+        J = []
+        Train_acc = []
         M = len(Ktrain_list)
-        eta = np.ones(M)/M
+        if eta0 is None :
+            eta = np.ones(M)/M
+        else :
+            eta = eta0
         converged = False
         ksvm = KSVM(self.lam)
         while not converged:
@@ -29,10 +36,13 @@ class  MKL_SVM():
                 K += Ktrain_list[m]*eta[m]
             #Solving the SVM:
             ksvm.train(K, ytrain)
-            gamma_star = ksvm.alpha * 2 * self.lam /ytrain
+            J += [ 2 * ksvm.alpha.T@ytrain - ksvm.alpha.T@K@ksvm.alpha]
+            Train_acc += [u.accuracy(ytrain,ksvm.predict(K))]
+            #gamma_star = ksvm.alpha * 2 * self.lam /ytrain
+            gamma_star = ksvm.alpha
             #Gradient step:
             gradient = np.array([-self.lam * gamma_star.T@K@gamma_star for K in Ktrain_list])
-            step = - step_size/self.lam * gradient
+            step = - step_size * gradient
             eta_new = eta + step
             #Projecting eta on L1 norm
             eta_new= self.projection_L1(eta_new)
@@ -43,11 +53,9 @@ class  MKL_SVM():
             print(eta)
         self.eta = eta
         self.KSVM = ksvm
-        K=0
-        for m in range(M):
-            K += Ktrain_list[m]*eta[m]
-        combKernel = k.kernel( Graam_matrix = K )
-        return combKernel
+        plt.plot(J, label = 'SVM_loss')
+        plt.figure()
+        plt.plot(Train_acc, label = "training accuracy")
 
 
     def make_arguments(self, kernel_list, idxs):
@@ -55,12 +63,20 @@ class  MKL_SVM():
         ytrain = kernel_list[0].get_train(idxs)[1]
         return Ktrain_list, ytrain
 
+    def make_sum_kernel(self, kernel_list):
+        eta = self.eta
+        M = len(eta)
+        K =0
+        for m in range(M):
+            K += kernel_list[m].gram_matrix*eta[m]
+        combKernel = k.kernel(s = kernel_list[0].s ,Graam_matrix = K )
+        return combKernel
 
 
     def set_hperparameters(self, lam):
         print("Not implemented yet")
 
-    def predict(self, return_float = False):
+    def predict(self, Kpred, return_float = False):
         return self.KSVM.predict(Kpred, return_float)
 
     def projection_L1(self, eta):

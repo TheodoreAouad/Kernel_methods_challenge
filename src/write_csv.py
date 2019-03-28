@@ -24,9 +24,11 @@ def create_sol(models,kernels):
     y1 = m1.predict(Xtest1)
     y2 = m2.predict(Xtest2)
     y3 = m3.predict(Xtest3)
-    
-    return np.concatenate((y1,y2,y3))
+    ytest = np.concatenate((y1,y2,y3)) 
+    ytest[ytest == -1] = 0
+    return ytest
 
+    
 def write_csv(Ytest,path):
     '''This function writes a vector in a csv file'''
     with open(path, mode = "w",newline='') as f:

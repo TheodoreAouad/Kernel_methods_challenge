@@ -7,7 +7,7 @@ class kernel():
 
     def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize = True, Graam_matrix=None):
         if Graam_matrix is not None :
-            self.graam_matrix = Graam_matrix
+            self.gram_matrix = Graam_matrix
         else :
             gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
             self.labels = pd.read_csv("./data/Ytr{}.csv".format(s)).values[:, 1]*2-1

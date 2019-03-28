@@ -38,7 +38,7 @@ def compute_squared_distance(K):
     d = np.diag(K)[:,np.newaxis]
     return d + d.T - 2*K
 
-def evaluateCV(model, K, n_lim = 2000, n_folds = 5, n_reps = 1, lam = 0.1, verbose = True):
+def evaluateCV(model, K, n_lim = 2000, n_folds = 5, n_reps = 1, verbose = True):
     idxs = np.arange(n_lim)
     scores = np.zeros((n_reps, n_folds))
     for rep in range(n_reps):

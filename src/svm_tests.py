@@ -9,17 +9,17 @@ from utils import evaluateCV
 
 
 s = 0
-k = 7
-m = 2
+k = 8
+m = 1
 gamma = None
-lam = 1
+lam = 1e-6
 
 K = kernel(s, k, m, gaussian = gamma)
 ksvm = KSVM(lam)
 
 #%%
 
-res = evaluateCV(ksvm, K, n_folds = 5, n_reps = 1, lam=lam)
+res = evaluateCV(ksvm, K, n_folds = 5, n_reps = 1)
 
 
 #%%

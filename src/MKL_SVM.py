@@ -32,7 +32,7 @@ class  MKL_SVM():
             gamma_star = ksvm.alpha * 2 * self.lam /ytrain
             #Gradient step:
             gradient = np.array([-self.lam * gamma_star.T@K@gamma_star for K in Ktrain_list])
-            step = - step_size/self.lam**2 * gradient
+            step = - step_size/self.lam * gradient
             eta_new = eta + step
             #Projecting eta on L1 norm
             eta_new= self.projection_L1(eta_new)
@@ -46,7 +46,7 @@ class  MKL_SVM():
         K=0
         for m in range(M):
             K += Ktrain_list[m]*eta[m]
-        combKernel = k.kernel(Graam_matrix=K)
+        combKernel = k.kernel( Graam_matrix = K )
         return comb_kernel
 
 

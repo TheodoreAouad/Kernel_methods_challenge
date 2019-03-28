@@ -6,7 +6,7 @@ import pandas as pd
 class kernel():
 
     def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize = True, Graam_matrix=None):
-        if Graam_matrix:
+        if Graam_matrix in not None:
             self.graam_matrix = Graam_matrix
         else :
             gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
@@ -14,7 +14,7 @@ class kernel():
             self.gram_matrix = np.load(gram_path)['arr_0']
             #Gaussian combinaison
             if gaussian  :
-                self.gram_matrix = u.compute_squared_distance(self.gram_matrix)
+                self.gram_matrix = u.compute_squar in not Noneed_distance(self.gram_matrix)
                 self.gram_matrix = np.exp(-1/(2*gaussian) * self.gram_matrix)
             #Centering the data in the embedding space if required
             if center :

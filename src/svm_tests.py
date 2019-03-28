@@ -12,7 +12,7 @@ s = 0
 k = 8
 m = 1
 gamma = None
-lam = 1e-6
+lam = 1e-5
 
 K = kernel(s, k, m, gaussian = gamma)
 ksvm = KSVM(lam)

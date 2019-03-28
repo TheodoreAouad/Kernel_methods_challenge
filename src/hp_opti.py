@@ -34,7 +34,7 @@ class HPOptimizer():
     def evaluate_hp(self, hp):
         self.model.set_hyperparameters(10**hp[0])
         print("Current hp tested : {:.3e}".format(10**hp[0]))
-        score = evaluateCV(self.model, self.K, n_folds = self.n_folds, n_reps = self.n_reps, n_reverbose = False)[1]
+        score = evaluateCV(self.model, self.K, n_folds = self.n_folds, n_reps = self.n_reps, verbose = False)[1]
         return score
 
     def explore(self, n_iters=64, method='RandomSearch', n_pre_samples=1, alpha=1e-10):

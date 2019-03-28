@@ -9,11 +9,11 @@ def create_sol(models,kernels):
     output: 1 vector of (-1,1) of size 3000'''
     
     s1,s2,s3 = kernels
-    Xtr1,ytr1 = s1.get_train(np.arange(2000))
+    Xtr1,ytr1 = s1.get_train2000()
     Xtest1    = s1.get_test2000()[0]
-    Xtr2,ytr2 = s2.get_train(np.arange(2000))
+    Xtr2,ytr2 = s2.get_train2000()
     Xtest2    = s2.get_test2000()[0]
-    Xtr3,ytr3 = s3.get_train(np.arange(2000))
+    Xtr3,ytr3 = s3.get_train2000()
     Xtest3    = s3.get_test2000()[0]
     
     m1,m2,m3 = models

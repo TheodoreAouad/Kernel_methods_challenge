@@ -47,7 +47,7 @@ class  MKL_SVM():
         for m in range(M):
             K += Ktrain_list[m]*eta[m]
         combKernel = k.kernel( Graam_matrix = K )
-        return comb_kernel
+        return combKernel
 
 
     def make_arguments(self, kernel_list, idxs):

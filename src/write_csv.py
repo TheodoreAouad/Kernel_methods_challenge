@@ -14,7 +14,7 @@ def create_sol(models,kernels):
     Xtr2,ytr2 = s2.get_train(np.arange(2000))
     Xtest2    = s2.get_test2000()[0]
     Xtr3,ytr3 = s3.get_train(np.arange(2000))
-    Xtest3    = s2.get_test2000()[0]
+    Xtest3    = s3.get_test2000()[0]
     
     m1,m2,m3 = models
     m1.train(Xtr1,ytr1)

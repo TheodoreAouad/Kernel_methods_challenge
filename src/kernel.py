@@ -5,13 +5,13 @@ import pandas as pd
 
 class kernel():
 
-    def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize = True, Graam_matrix=None):
+    def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize = True, Graam_matrix=None,path_to_gram="./gram_matrices/mismatch",path_to_labels="./data"):
         self.s = s
-        self.labels = pd.read_csv("./data/Ytr{}.csv".format(s)).values[:, 1]*2-1
+        self.labels = pd.read_csv(path_to_labels+"/Ytr{}.csv".format(s)).values[:, 1]*2-1
         if Graam_matrix is not None :
             self.gram_matrix = Graam_matrix
         else :
-            gram_path = "./gram_matrices/mismatch/mismatch{}k@{}m@{}.npz".format(s, k, m)
+            gram_path = path_to_gram+"/mismatch{}k@{}m@{}.npz".format(s, k, m)
             self.gram_matrix = np.load(gram_path)['arr_0']
             #Gaussian combinaison
             if gaussian  :

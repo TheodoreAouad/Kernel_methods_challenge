@@ -51,6 +51,6 @@ def write_lambdas(path_to_gram,path_to_labels,ss,ks,ms,center,normalize,gaussian
                     writer = csv.writer(f)
                     writer.writerow([str(x) for x in towrite])
                 res[(s,k,m,center,normalize,gaussian)] = (best_lam,best_score)
-                print("====================== time:{}\n".format(time()-start))
+                print("====================== time: {} s\n".format(round(time()-start)))
                 
     return res

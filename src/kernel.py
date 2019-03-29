@@ -5,7 +5,7 @@ import pandas as pd
 
 class kernel():
 
-    def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize = True, Graam_matrix=None,path_to_gram="./gram_matrices/mismatch",path_to_labels="./data"):
+    def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize_before_gaussian=False, normalize = True, Graam_matrix=None,path_to_gram="./gram_matrices/mismatch",path_to_labels="./data"):
         self.s = s
         self.labels = pd.read_csv(path_to_labels+"/Ytr{}.csv".format(s)).values[:, 1]*2-1
         if Graam_matrix is not None :
@@ -14,6 +14,8 @@ class kernel():
             gram_path = path_to_gram+"/mismatch{}k@{}m@{}.npz".format(s, k, m)
             self.gram_matrix = np.load(gram_path)['arr_0']
             #Gaussian combinaison
+            if normalize_before_gaussian and gaussian:
+                self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
             if gaussian  :
                 self.gram_matrix = u.compute_squared_distance(self.gram_matrix)
                 self.gram_matrix = np.exp(-1/(2*gaussian) * self.gram_matrix)

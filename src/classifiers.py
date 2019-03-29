@@ -11,41 +11,41 @@ class KNN():
         self.data = None
         self.label = None
 
-    def train(self,X,y,kernel):
+    def train(self, X, y, kernel):
         self.kernel = kernel
         self.data = X
         self.label = y
 
-        #gram = np.zeros((X.shape[0],X.shape[0]))
-        #for i in range(X.shape[0]):
+        # gram = np.zeros((X.shape[0],X.shape[0]))
+        # for i in range(X.shape[0]):
         #  for j in range(i,X.shape[0]):
         #    gram[i,j] = kernel(X[i],X[j])
         #    gram[j,i] = gram[i,j]
-        #self.gram = gram
+        # self.gram = gram
         return True
 
-    def predict_one(self,x,k):
+    def predict_one(self, x, k):
         dists = np.zeros(self.data.shape[0])
         for i in range(dists.shape[0]):
-            dists[i] = self.Kdist(x,self.data[i])
+            dists[i] = self.Kdist(x, self.data[i])
         neighbors = self.label[dists.argsort()][:k]
-        uniq,cnts = np.unique(neighbors, return_counts=1)
+        uniq, cnts = np.unique(neighbors, return_counts=1)
         return uniq[cnts.argsort()][-1]
 
-    def predict(self,X,k):
+    def predict(self, X, k):
         labels = np.zeros(X.shape[0])
-        for i,x in enumerate(X):
-            labels[i] = self.predict_one(x,k)
+        for i, x in enumerate(X):
+            labels[i] = self.predict_one(x, k)
         return labels
 
-    def Kdist(self,x,y):
-        return (self.kernel(x,x) + self.kernel(y,y) - 2*self.kernel(x,y))**0.5
+    def Kdist(self, x, y):
+        return (self.kernel(x, x) + self.kernel(y, y) - 2 * self.kernel(x, y)) ** 0.5
 
 
 class KSVM:
 
-    def __init__(self, lam = 1):
-        #self.type = 1 # Pour implementer plus tard le SVM2 avec la squared hinge loss
+    def __init__(self, lam=1):
+        # self.type = 1 # Pour implementer plus tard le SVM2 avec la squared hinge loss
         self.alpha = None
         self.alpha_short = None
         self.support_vectors = None
@@ -57,24 +57,45 @@ class KSVM:
         self.lam = lam
 
     def train(self, Ktrain, ytrain):
-        #setting the environment for cvxopt
+        # setting the environment for cvxopt
         n = len(ytrain)
         ytrain = ytrain.astype(float)
         P = matrix(Ktrain.astype(float))
         q = matrix(-ytrain)
-        G = matrix( np.vstack([np.diag(ytrain),-1*np.diag(ytrain)]) )
-        h = matrix( np.hstack([np.ones(n)*1/(2*n*self.lam), np.zeros(n)]))
+        G = matrix(np.vstack([np.diag(ytrain), -1 * np.diag(ytrain)]))
+        h = matrix(np.hstack([np.ones(n) * 1 / (2 * n * self.lam), np.zeros(n)]))
         solvers.options['show_progress'] = False
         solution = solvers.qp(P=P, q=q, G=G, h=h)
-        self.alpha= np.array(solution['x'])[:,0]
+        self.alpha = np.array(solution['x'])[:, 0]
         self.support_vectors = np.where(np.abs(self.alpha) > 1e-5)[0]
         self.alpha_short = self.alpha[self.support_vectors]
 
-
-    def predict(self, Kpred, return_float = False):
+    def predict(self, Kpred, return_float=False):
         if return_float:
-            return Kpred@self.alpha
+            return Kpred @ self.alpha
         else:
-            ypred = np.array(Kpred@self.alpha>0, dtype=int)
-            ypred = ypred*2 - 1
+            ypred = np.array(Kpred @ self.alpha > 0, dtype=int)
+            ypred = ypred * 2 - 1
             return ypred
+
+
+class KSVM_pool:
+
+    def __init__(self, ksvm_list, fit_weights=False):
+        self.ksvm_list = ksvm_list
+        self.n_ksvn = len(ksvm_list)
+        self.weights = np.ones(self.n_ksvn) / self.n_ksvn
+        self.fit_weights = fit_weights
+
+    def train(self, Ktrain_list, ytrain):
+        for i, Ktrain in enumerate(Ktrain_list):
+            self.ksvm_list[i].train(Ktrain, ytrain)
+
+    def predict(self, Kpred_list):
+        ypred = []
+        for i, Kpred in enumerate(Kpred_list):
+            ypred.append(self.ksvm_list[i].predict(Kpred))
+        ypred = np.array(ypred)
+        ypred = np.array(np.sum(self.weights[:, None]*ypred, axis=0) > 0, dtype=int)
+        ypred = ypred * 2 - 1
+        return ypred

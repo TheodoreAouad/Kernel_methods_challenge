@@ -86,12 +86,16 @@ class KSVM:
             self.alpha_short = self.alpha[self.support_vectors]
 
     def predict(self, Kpred, return_float=False):
+        score = Kpred @ self.alpha
+        if self.with_intercept:
+            score += self.intercept
         if return_float:
-            return Kpred @ self.alpha
+            return score
         else:
-            ypred = np.array(Kpred @ self.alpha > 0, dtype=int)
+            ypred = np.array(score > 0, dtype=int)
             ypred = ypred * 2 - 1
             return ypred
+
 
 class KSVM_pool:
 

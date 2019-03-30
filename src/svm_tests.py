@@ -30,22 +30,23 @@ res = evaluateCV(ksvm, K, n_folds = 10, n_reps = 3)
 #%%
 
 
-s = 2
+s = 0
 k_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 m_list = [0, 1]
-gamma = 2000
+gamma = None
 
-K_list3 = []
+K_list1 = []
 for k in k_list:
     for m in m_list:
-        K_list3.append(kernel(s, k, m, gaussian = gamma))
+        K_list1.append(kernel(s, k, m, gaussian = gamma))
 
 lam = 1e-4
-ksvm_list = [KSVM(lam) for i in range(len(K_list))]
-model3 = KSVM_pool(ksvm_list)
+ksvm_list = [KSVM(lam) for i in range(len(K_list1))]
+
 
 #%%
 
+model1 = KSVM_pool(ksvm_list, fit_weights = True)
 res = evaluateCVpool(model1, K_list1, n_lim=2000, n_folds=5, n_reps=1, verbose=True)
 
 #%%

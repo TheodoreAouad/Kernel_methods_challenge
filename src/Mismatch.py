@@ -130,7 +130,7 @@ class MismatchTree():
 
     def _aux_get_leaves_indicator(self, n):
         if self.depth == self.k:
-            indicator = np.zeros((n, 1), dtype=np.int8)
+            indicator = np.zeros((n, 1), dtype=np.float32)
             for elem in self.list_pointers:
                 indicator[elem[0]] += 1
             return [indicator]
@@ -170,4 +170,4 @@ def precalc_gram(path, k_list, m_list, sets):
 
 # %%
 
-#precalc_gram("./gram_matrices/mismatch", range(9, 11), [0, 1], [1])
+precalc_gram("./gram_matrices/mismatch", range(11, 13), [0, 1], [0, 1, 2])

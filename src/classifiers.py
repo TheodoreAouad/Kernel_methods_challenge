@@ -1,5 +1,6 @@
 import numpy as np
 from cvxopt import matrix, solvers
+from regression import ridge
 
 
 class KNN():
@@ -90,6 +91,13 @@ class KSVM_pool:
     def train(self, Ktrain_list, ytrain):
         for i, Ktrain in enumerate(Ktrain_list):
             self.ksvm_list[i].train(Ktrain, ytrain)
+        if self.fit_weights:
+            ytrain_pred = []
+            for i, Ktrain in enumerate(Ktrain_list):
+                ytrain_pred.append(self.ksvm_list[i].predict(Ktrain))
+            ytrain_pred = np.array(ytrain_pred).T
+            self.weights = ridge(ytrain_pred, ytrain, 1)
+            print(self.weights.shape, self.weights)
 
     def predict(self, Kpred_list):
         ypred = []

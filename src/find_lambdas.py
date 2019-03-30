@@ -7,7 +7,7 @@ from time import time
 
 def write_lambdas(path_to_gram,path_to_labels,ss,ks,ms,center,normalize,gaussians,bounds,mode="w",n_iters=10,n_folds=10):
     '''This function computes the optimal lambdas according to the parameters.
-    
+
     Input:
         ss: sets to analyze
         ks: kernels to analyze
@@ -19,15 +19,15 @@ def write_lambdas(path_to_gram,path_to_labels,ss,ks,ms,center,normalize,gaussian
     Output:
         dictionary of keys:parameters, values:(lambdas,scores)
     '''
-    
+
     dirName = 'lambdas'
     try:
         # Create target Directory
         os.mkdir(dirName)
-        print("Directory " , dirName ,  " created ") 
+        print("Directory " , dirName ,  " created ")
     except FileExistsError:
         print("Directory " , dirName ,  " already exists")
-    
+
     if mode == "w":
         with open("lambdas/lambdas.csv",mode="w",newline='') as f:
             writer = csv.writer(f)
@@ -53,5 +53,7 @@ def write_lambdas(path_to_gram,path_to_labels,ss,ks,ms,center,normalize,gaussian
                         writer.writerow([str(x) for x in towrite])
                     res[(s,k,m,center,normalize,gaussian)] = (best_lam,best_score)
                     print("====================== time: {} s\n".format(round(time()-start)))
-                
+
     return res
+
+write_lambdas("./gram_matrices/mismatch/","./data/",[2] ,range(2, 11),range(2),True,True,[None],[-6, -4],mode="a",n_iters=20,n_folds=5)

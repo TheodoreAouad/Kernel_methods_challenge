@@ -5,7 +5,9 @@ import pandas as pd
 
 class kernel():
 
-    def __init__(self, s=0, k=3, m=0, center = True, gaussian = None, normalize_before_gaussian=False, normalize = True, Graam_matrix=None,path_to_gram="./gram_matrices/mismatch",path_to_labels="./data"):
+    def __init__(self, s=0, k=3, m=0, center = True, gaussian_auto = False, gaussian = None,
+                 normalize_before_gaussian=False, normalize = True, Graam_matrix=None,
+                 path_to_gram="./gram_matrices/mismatch",path_to_labels="./data"):
         self.s = s
         self.labels = pd.read_csv(path_to_labels+"/Ytr{}.csv".format(s)).values[:, 1]*2-1
         if Graam_matrix is not None :

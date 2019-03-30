@@ -37,7 +37,7 @@ def make_kernel_specs(s_list, k_list, m_list, gaussian = None, gaussian_auto = F
                 kernel_specs.append(dict( s = s,  k=k, m=m, gaussian=gaussian, gaussian_auto = gaussian_auto))
     return kernel_specs
 
-def load_pooling_lists(kernel_specs, path_to_lambda):
+def load_pooling_lists(kernel_specs, path_to_lambda, with_intercept = True):
     models_lists = [[], [], []]
     kernels_lists = [[], [], []]
     lambda_df = pd.read_csv(path_to_lambda)
@@ -61,7 +61,7 @@ def load_pooling_lists(kernel_specs, path_to_lambda):
             print(float(lambda_row["best_lambda"]))
             models_lists[s].append(KSVM(float(lambda_row["best_lambda"])))
         else:
-            models_lists[s].append(KSVM(1e-4))
+            models_lists[s].append(KSVM(1e-4, with_intercept = with_intercept))
 
 
         #models_lists[s].append(KSVM(1e-4))
@@ -72,7 +72,7 @@ k_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 m_list = [0, 1]
 
 kernel_specs = make_kernel_specs(s_list, k_list, m_list, gaussian = None, gaussian_auto = True)
-models_lists, kernels_lists = load_pooling_lists(kernel_specs, "./lambdas/lambdas.csv")
+models_lists, kernels_lists = load_pooling_lists(kernel_specs, "./lambdas/lambdas.csv". with_intercept = True)
 #%%
 pool_models = [KSVM_pool(models_lists[0], fit_weights = False),
                KSVM_pool(models_lists[1], fit_weights = False),

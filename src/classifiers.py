@@ -85,7 +85,13 @@ class KSVM:
             self.support_vectors = np.where(np.abs(self.alpha) > 1e-5)[0]
             self.alpha_short = self.alpha[self.support_vectors]
 
-
+    def predict(self, Kpred, return_float=False):
+        if return_float:
+            return Kpred @ self.alpha
+        else:
+            ypred = np.array(Kpred @ self.alpha > 0, dtype=int)
+            ypred = ypred * 2 - 1
+            return ypred
 
 class KSVM_pool:
 

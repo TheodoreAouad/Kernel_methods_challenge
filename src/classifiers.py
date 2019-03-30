@@ -45,7 +45,7 @@ class KNN():
 
 class KSVM:
 
-    def __init__(self, lam=1):
+    def __init__(self, lam=1, with_intercept = False):
         # self.type = 1 # Pour implementer plus tard le SVM2 avec la squared hinge loss
         self.alpha = None
         self.alpha_short = None
@@ -53,6 +53,8 @@ class KSVM:
         self.gram_matrix = None
         self.lam = lam
         self.n_train = None
+        self.intercept = None
+        self.with_intercept = with_intercept
 
     def set_hyperparameters(self, lam):
         self.lam = lam
@@ -65,19 +67,24 @@ class KSVM:
         q = matrix(-ytrain)
         G = matrix(np.vstack([np.diag(ytrain), -1 * np.diag(ytrain)]))
         h = matrix(np.hstack([np.ones(n) * 1 / (2 * n * self.lam), np.zeros(n)]))
-        solvers.options['show_progress'] = False
-        solution = solvers.qp(P=P, q=q, G=G, h=h)
-        self.alpha = np.array(solution['x'])[:, 0]
-        self.support_vectors = np.where(np.abs(self.alpha) > 1e-5)[0]
-        self.alpha_short = self.alpha[self.support_vectors]
+        if self.with_intercept:
+            A = matrix(np.ones((1,n)))
+            b = matrix(np.zeros(1))
+            solvers.options['show_progress'] = False
+            solution = solvers.qp(P=P, q=q, G=G, h=h, A=A, b=b)
+            self.alpha = np.array(solution['x'])[:, 0]
+            self.support_vectors = np.where(np.abs(self.alpha) > 1e-5)[0]
+            self.alpha_short = self.alpha[self.support_vectors]
+            #Calcul de l'intercept :
+            i = np.where( (self.alpha>0) * (self.alpha < 1 / (2 * n * self.lam)) )[0][0]
+            self.intercept = 1 - (Ktrain@self.alpha)[i]
+        else =
+            solvers.options['show_progress'] = False
+            solution = solvers.qp(P=P, q=q, G=G, h=h)
+            self.alpha = np.array(solution['x'])[:, 0]
+            self.support_vectors = np.where(np.abs(self.alpha) > 1e-5)[0]
+            self.alpha_short = self.alpha[self.support_vectors]
 
-    def predict(self, Kpred, return_float=False):
-        if return_float:
-            return Kpred @ self.alpha
-        else:
-            ypred = np.array(Kpred @ self.alpha > 0, dtype=int)
-            ypred = ypred * 2 - 1
-            return ypred
 
 
 class KSVM_pool:
@@ -107,3 +114,26 @@ class KSVM_pool:
         ypred = np.array(np.sum(self.weights[:, None]*ypred, axis=0) > 0, dtype=int)
         ypred = ypred * 2 - 1
         return ypred
+
+
+
+# class Logistic_pool:
+#
+#     def __init__(self, ksvm_list, lam_logistic):
+#         self.n_ksvn = len(ksvm_list)
+#         self.ksvm_list = ksvm_list
+#         self.lam_logistic = lam_logistic
+#
+#     def train(self, Ktrain_list, ytrain):
+#         for i, Ktrain in enumerate(Ktrain_list):
+#             self.ksvm_list[i].train(Ktrain, ytrain)
+#
+#
+#     def predict(self, Ktrain_list, ytrain, normalize = True):
+#         ypred = []
+#         for i, Kpred in enumerate(Kpred_list):
+#             ypred.append(self.ksvm_list[i].predict(Kpred, return_float=True))
+#         ypred = np.array(ypred)
+#         ypred = y_pred / np.sqrt(np.mean(ypred**2, axis=0))
+#         ypred =
+#         return ypred

@@ -18,7 +18,6 @@ def logistic_reg(Xtrain, ytrain, intercept = True):
     w_ = np.zeros((d,), dtype = float)
     eta = np.zeros((N,1),dtype = float)
     itermax = 2000
-    it = 0
     eps = 0.001
     for i in range(itermax):
         eta = sigma(Xtrain.dot(w_))
@@ -26,7 +25,7 @@ def logistic_reg(Xtrain, ytrain, intercept = True):
         # In case the hessian is numericaly not invertible
         if np.linalg.det(np.transpose(Xtrain)@ D@Xtrain) < eps:
             break
-        w = w_ + np.linalg.inv(np.transpose(Xtrain)@ D@Xtrain)  Xtrain.transpose() @ (ytrain-eta)
+        w = w_ + np.linalg.inv(np.transpose(Xtrain)@D@Xtrain)@Xtrain.transpose() @ (ytrain-eta)
         if np.max(np.abs(w-w_))<eps:
             break
         w_ = w
@@ -42,4 +41,4 @@ def predict_logistic_reg(w, Xtrain, ytrain, intercept = True, return_float=False
     if return_float:
         return score
     else :
-        returc score > 0.5
+        return score > 0.5

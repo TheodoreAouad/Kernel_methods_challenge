@@ -18,12 +18,14 @@ m = 1
 gamma = 2000
 lam = 1e-5
 
-K = kernel(s, k, m, gaussian_auto = True)
+K = kernel(s, k, m, gaussian_auto = False)
 print(K.gaussian)
-ksvm = KSVM(lam)
-optimizer = HPOptimizer(ksvm, K, bounds = [-6, 2])
-optimizer.explore(9, "GridSearch")
+ksvm = KSVM(lam, with_intercept = True)
+#optimizer = HPOptimizer(ksvm, K, bounds = [-6, 2])
+#optimizer.explore(9, "GridSearch")
+#%%
 
+evaluateCV(ksvm, K, n_lim=2000, n_folds=10, n_reps=3, verbose=True)
 
 
 #%%
@@ -72,7 +74,7 @@ k_list = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 m_list = [0, 1]
 
 kernel_specs = make_kernel_specs(s_list, k_list, m_list, gaussian = None, gaussian_auto = True)
-models_lists, kernels_lists = load_pooling_lists(kernel_specs, "./lambdas/lambdas.csv". with_intercept = True)
+models_lists, kernels_lists = load_pooling_lists(kernel_specs, "./lambdas/lambdas.csv", with_intercept = True)
 #%%
 pool_models = [KSVM_pool(models_lists[0], fit_weights = False),
                KSVM_pool(models_lists[1], fit_weights = False),

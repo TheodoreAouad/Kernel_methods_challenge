@@ -78,6 +78,7 @@ class KSVM:
             #Calcul de l'intercept :
             i = np.where( (self.alpha>0) * (self.alpha < 1 / (2 * n * self.lam)) )[0][0]
             self.intercept = 1 - (Ktrain@self.alpha)[i]
+            print(self.intercept)
         else:
             solvers.options['show_progress'] = False
             solution = solvers.qp(P=P, q=q, G=G, h=h)

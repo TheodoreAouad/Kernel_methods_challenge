@@ -16,9 +16,12 @@ class kernel():
             gram_path = path_to_gram+"/mismatch{}k@{}m@{}.npz".format(s, k, m)
             self.gram_matrix = np.load(gram_path)['arr_0']
             #Gaussian combinaison
+            if gaussian_auto:
+                dists = u.compute_squared_distance(self.gram_matrix)
+                self.gaussian = np.median(dists)
             if normalize_before_gaussian and gaussian:
                 self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
-            if gaussian  :
+            if gaussian:
                 self.gram_matrix = u.compute_squared_distance(self.gram_matrix)
                 self.gram_matrix = np.exp(-1/(2*gaussian) * self.gram_matrix)
             #Centering the data in the embedding space if required

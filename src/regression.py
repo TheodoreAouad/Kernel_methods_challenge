@@ -10,7 +10,7 @@ def ridge(X, y, lam= 0.001):
     return inv(X.T@X + lam*I)@X.T@y
 
 
-def logistic_reg(Xtrain, ytrain, intercept = True):
+def logistic_reg(Xtrain, ytrain, intercept = False):
     ytrain = (ytrain + 1)/2
     if intercept:
         Xtrain = np.c_[np.ones(Xtrain.shape[0]), Xtrain]
@@ -28,6 +28,7 @@ def logistic_reg(Xtrain, ytrain, intercept = True):
         w = w_ + np.linalg.inv(np.transpose(Xtrain)@D@Xtrain)@Xtrain.transpose() @ (ytrain-eta)
         if np.max(np.abs(w-w_))<eps:
             break
+        print(np.max(np.abs(w-w_)))
         w_ = w
     return w_
 

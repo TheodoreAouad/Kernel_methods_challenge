@@ -20,7 +20,7 @@ def logistic_reg(Xtrain, ytrain, intercept=False):
     eta = np.zeros((N, 1), dtype=float)
     itermax = 2000
     eps = 0.001
-    print(Xtrain[0])
+    #print(Xtrain[0])
     for i in range(itermax):
         eta = sigma(Xtrain.dot(w_))
         D = np.diag(eta)
@@ -31,7 +31,7 @@ def logistic_reg(Xtrain, ytrain, intercept=False):
         w = w_ + np.linalg.inv(np.transpose(Xtrain) @ D @ Xtrain) @ Xtrain.transpose() @ (ytrain - eta)
         if np.max(np.abs(w - w_)) < eps:
             break
-        print(np.max(np.abs(w - w_)))
+        #print(np.max(np.abs(w - w_)))
         w_ = w
     return w_
 

@@ -5,7 +5,7 @@ import numpy as np
 from utils import evaluateCV
 
 
-class HPOptimizer():
+class HPOptimizer:
 
     def __init__(self, model, K, n_folds=10, n_reps=3, bounds=None):
         if not (bounds):
@@ -38,7 +38,7 @@ class HPOptimizer():
         score = evaluateCV(self.model, self.K, n_folds=self.n_folds, n_reps=self.n_reps, verbose=False)[1]
         return score
 
-    def explore(self, n_iters=64, method='RandomSearch', n_pre_samples=1, alpha=1e-10):
+    def explore(self, n_iters=64, method='RandomSearch'):
         bounds = self.bounds
         if method == "RandomSearch":
             hp_list = np.random.uniform(

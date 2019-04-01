@@ -12,9 +12,6 @@ from numba import jit
 import time
 
 
-# X = pd.read_csv(data_path + "Xtr0.csv").values[:, 1]
-
-
 class MismatchTree():
     """
     Tree based data structure used to calculate mismatch Gram matrices, according Leslie and al. 2004.
@@ -142,19 +139,26 @@ class MismatchTree():
             return temp_list
 
 
-def precalc_gram(path, k_list, m_list, sets):
-    data_path = "./data/"
+def precalc_gram(path, k_list, m_list, sets, data_path = "./data/"):
+    """Calculate mismatch gram matrices (k, m) for set s along the cartesian
+    product k_list*m_lists*sets"""
+    try:
+        # Create target Directory
+        os.makedirs(path)
+        print("Directory ", path, " created ")
+    except FileExistsError:
+        print("Directory ", path, " already exists")
     for s in sets:
         Xtrain = pd.read_csv(data_path + "Xtr{}.csv".format(s)).values[:, 1]
         Xtest = pd.read_csv(data_path + "Xte{}.csv".format(s)).values[:, 1]
         X = np.concatenate((Xtrain, Xtest), axis=0)
         for k in k_list:
             for m in m_list:
-                print(s, k, m)
+                print(f"\nGenerating the mismatch Gram matrix (k:{k}, m:{m})for dataset {s}")
                 t0 = time.time()
                 tree = MismatchTree(k, m, label="", children={}, depth=0, alphabet="ATCG")
                 tree.fit(X)
-                print("Tree built in {:.3f}s ".format(time.time() - t0))
+                print("Mismatch tree built in {:.3f}s ".format(time.time() - t0))
                 t0 = time.time()
                 name = "mismatch{}k@{}m@{}".format(s, k, m)
                 G = tree.compute_gram_matrix()
@@ -162,13 +166,3 @@ def precalc_gram(path, k_list, m_list, sets):
                 np.savez(os.path.join(path, name), G)
                 del (tree)
 
-
-# %%
-# tree = MismatchTree(k=3, m=0)
-# tree.fit(X)
-
-# G = tree.compute_gram_matrix()
-
-# %%
-
-precalc_gram("./gram_matrices/mismatch", range(10), [1], [0, 1, 2])

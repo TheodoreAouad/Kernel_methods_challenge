@@ -3,7 +3,8 @@ import utils as u
 import pandas as pd
 
 
-class kernel():
+class kernel:
+    """Class for loading, preprocessing and returning kernel matrices for specified indexes."""
 
     def __init__(self, s=0, k=3, m=0, center=True, gaussian_auto=False, gaussian=None,
                  normalize_before_gaussian=False, normalize=True, graam_matrix=None,

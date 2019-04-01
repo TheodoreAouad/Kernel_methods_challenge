@@ -8,6 +8,113 @@ from classifiers import KSVM, KSVM_pool
 from kernel import kernel
 
 
+def make_kernel_specs(s_list, k_list, m_list, gaussian=None, gaussian_auto=False):
+    """Create a list of dictionaries specifying the kernels to be created and their
+    corresponding models."""
+    kernel_specs = []
+    for s in s_list:
+        for k in k_list:
+            for m in m_list:
+                kernel_specs.append(dict(s=s, k=k, m=m, gaussian=gaussian, gaussian_auto=gaussian_auto))
+    return kernel_specs
+
+
+def load_pooling_lists(kernel_specs, path_to_lambda, with_intercept=True):
+    """Load a list of models and kernels, according to a specification dictionary.
+    The best lambda hyperparameter for each SVM will be loaded from a file saving
+    the best ones, and obtained by grid search."""
+    models_lists = [[], [], []]
+    kernels_lists = [[], [], []]
+    lambda_df = pd.read_csv(path_to_lambda)
+    for spec in kernel_specs:
+        s = spec["s"]
+        k = spec["k"]
+        m = spec["m"]
+        if "gaussian" in spec.keys():
+            gaussian = spec["gaussian"]
+        else:
+            gaussian = None
+        if "gaussian_auto" in spec.keys():
+            gaussian_auto = spec["gaussian_auto"]
+        else:
+            gaussian_auto = False
+        kernels_lists[s].append(kernel(s=s, k=k, m=m, center=True, gaussian_auto=gaussian_auto,
+                                       gaussian=gaussian, normalize_before_gaussian=False, normalize=True))
+        if not (gaussian_auto):
+            lambda_row = lambda_df.loc[(lambda_df["dataset"] == s) & (lambda_df["k"] == k) & (lambda_df["m"] == m)]
+            print("dataset: {}, linear mismatch kernel (k: {}, m: {}), SVM lambda: {:.3e}".format(s, k, m,
+                                                                                                            float(
+                                                                                                                lambda_row[
+                                                                                                                    "best_lambda"])))
+            models_lists[s].append(KSVM(float(lambda_row["best_lambda"]), with_intercept=with_intercept))
+        else:
+            models_lists[s].append(KSVM(1e-4, with_intercept=with_intercept))
+            print(
+                "dataset: {}, gaussian mismatch kernel (k: {}, m: {}), kernel sigma^2 : {:.3e}, SVM lambda: {:.3e}".format(
+                    s, k, m, kernels_lists[s][-1].gaussian / 2, 0.0001))
+    return models_lists, kernels_lists
+
+
+def fit_weights_pool(model, K_list, n_lim=2000, n_svm=1800):
+    """Fit the weights of our pooling model using a logistic regression
+    on the results of models trained on n_svm samples"""
+    svm_idxs = np.arange(n_svm)
+    log_idxs = np.arange(n_svm, n_lim)
+    Ksvm_list = [K.get_train(svm_idxs)[0] for K in K_list]
+    ysvm = K_list[0].get_train(svm_idxs)[1]
+    Klog_list = [K.get_valid(svm_idxs, log_idxs)[0] for K in K_list]
+    ylog = K_list[0].get_valid(svm_idxs, log_idxs)[1]
+    model.train(Ksvm_list, ysvm)
+    ysvm_pred = []
+    for i, Ksvm in enumerate(Ksvm_list):
+        ysvm_pred.append(model.ksvm_list[i].predict(Klog_list[i], return_float=True))
+    ysvm_pred = np.array(ysvm_pred).T
+    model.weights = logistic_reg(ysvm_pred, ylog, intercept=False)
+    #print(model.weights)
+    return model.weights
+
+
+def create_sol_pool(pool_models, kernels_lists):
+    '''This function creates the last vector of labels
+    Input: 3 pooling models, 3 sets of data
+    output: 1 vector of (-1,1) of size 3000'''
+
+    Kl1, Kl2, Kl3 = kernels_lists
+
+    Kltrain1 = [K.get_train2000()[0] for K in Kl1]
+    ytrain1 = Kl1[0].get_train2000()[1]
+    Kltest1 = [K.get_test2000()[0] for K in Kl1]
+
+    Kltrain2 = [K.get_train2000()[0] for K in Kl2]
+    ytrain2 = Kl2[0].get_train2000()[1]
+    Kltest2 = [K.get_test2000()[0] for K in Kl2]
+
+    Kltrain3 = [K.get_train2000()[0] for K in Kl3]
+    ytrain3 = Kl3[0].get_train2000()[1]
+    Kltest3 = [K.get_test2000()[0] for K in Kl3]
+
+    m1, m2, m3 = pool_models
+    print("Training the first dataset's model")
+    m1.train(Kltrain1, ytrain1)
+    print("Training the second dataset's model")
+    m2.train(Kltrain2, ytrain2)
+    print("Training the third dataset's model")
+    m3.train(Kltrain3, ytrain3)
+
+    print("Predicting with the first dataset's model")
+    y1 = m1.predict(Kltest1)
+    print("Predicting with the second dataset's model")
+    y2 = m2.predict(Kltest2)
+    print("Predicting with the third dataset's model")
+    y3 = m3.predict(Kltest3)
+    ytest = np.concatenate((y1, y2, y3))
+    ytest[ytest == -1] = 0
+    return ytest
+
+
+#################################################################
+
+
 def train_val_split(X, y, p=0.1):
     l = len(X)
     sep = math.floor(l * p)
@@ -143,100 +250,3 @@ def write_sol(models, kernels, file="res"):
     ytest = create_sol(models, kernels)
     write_csv(ytest, dirName + "/" + file + ".csv")
     print("Writing complete.")
-
-
-def create_sol_pool(pool_models, kernels_lists):
-    '''This function creates the last vector of labels
-    Input: 3 pooling models, 3 sets of data
-    output: 1 vector of (-1,1) of size 3000'''
-
-    Kl1, Kl2, Kl3 = kernels_lists
-
-    Kltrain1 = [K.get_train2000()[0] for K in Kl1]
-    ytrain1 = Kl1[0].get_train2000()[1]
-    Kltest1 = [K.get_test2000()[0] for K in Kl1]
-
-    Kltrain2 = [K.get_train2000()[0] for K in Kl2]
-    ytrain2 = Kl2[0].get_train2000()[1]
-    Kltest2 = [K.get_test2000()[0] for K in Kl2]
-
-    Kltrain3 = [K.get_train2000()[0] for K in Kl3]
-    ytrain3 = Kl3[0].get_train2000()[1]
-    Kltest3 = [K.get_test2000()[0] for K in Kl3]
-
-    m1, m2, m3 = pool_models
-    print("Training the first dataset's model")
-    m1.train(Kltrain1, ytrain1)
-    print("Training the second dataset's model")
-    m2.train(Kltrain2, ytrain2)
-    print("Training the third dataset's model")
-    m3.train(Kltrain3, ytrain3)
-
-    print("Predicting with the first dataset's model")
-    y1 = m1.predict(Kltest1)
-    print("Predicting with the second dataset's model")
-    y2 = m2.predict(Kltest2)
-    print("Predicting with the third dataset's model")
-    y3 = m3.predict(Kltest3)
-    ytest = np.concatenate((y1, y2, y3))
-    ytest[ytest == -1] = 0
-    return ytest
-
-
-def make_kernel_specs(s_list, k_list, m_list, gaussian=None, gaussian_auto=False):
-    kernel_specs = []
-    for s in s_list:
-        for k in k_list:
-            for m in m_list:
-                kernel_specs.append(dict(s=s, k=k, m=m, gaussian=gaussian, gaussian_auto=gaussian_auto))
-    return kernel_specs
-
-
-def load_pooling_lists(kernel_specs, path_to_lambda, with_intercept=True):
-    models_lists = [[], [], []]
-    kernels_lists = [[], [], []]
-    lambda_df = pd.read_csv(path_to_lambda)
-    for spec in kernel_specs:
-        s = spec["s"]
-        k = spec["k"]
-        m = spec["m"]
-        if "gaussian" in spec.keys():
-            gaussian = spec["gaussian"]
-        else:
-            gaussian = None
-        if "gaussian_auto" in spec.keys():
-            gaussian_auto = spec["gaussian_auto"]
-        else:
-            gaussian_auto = False
-        kernels_lists[s].append(kernel(s=s, k=k, m=m, center=True, gaussian_auto=gaussian_auto,
-                                       gaussian=gaussian, normalize_before_gaussian=False, normalize=True))
-        if not (gaussian_auto):
-            lambda_row = lambda_df.loc[(lambda_df["dataset"] == s) & (lambda_df["k"] == k) & (lambda_df["m"] == m)]
-            print("dataset: {}, linear mismatch kernel (k: {}, m: {}), SVM parameter lambda: {:.3e}".format(s, k, m,
-                float(lambda_row["best_lambda"])))
-            models_lists[s].append(KSVM(float(lambda_row["best_lambda"]), with_intercept=with_intercept))
-        else:
-            models_lists[s].append(KSVM(1e-4, with_intercept=with_intercept))
-            print(
-                "dataset: {}, gaussian mismatch kernel (k: {}, m: {}), kernel parameter sigma^2 : {:.3e}, SVM parameter lambda: {:.3e}".format(
-                    s, k, m, kernels_lists[s][-1].gaussian / 2, 0.0001))
-
-        # models_lists[s].append(KSVM(1e-4))
-    return models_lists, kernels_lists
-
-
-def fit_weights_pool(model, K_list, n_lim=2000, n_svm=1800):
-    svm_idxs = np.arange(n_svm)
-    log_idxs = np.arange(n_svm, n_lim)
-    Ksvm_list = [K.get_train(svm_idxs)[0] for K in K_list]
-    ysvm = K_list[0].get_train(svm_idxs)[1]
-    Klog_list = [K.get_valid(svm_idxs, log_idxs)[0] for K in K_list]
-    ylog = K_list[0].get_valid(svm_idxs, log_idxs)[1]
-    model.train(Ksvm_list, ysvm)
-    ysvm_pred = []
-    for i, Ksvm in enumerate(Ksvm_list):
-        ysvm_pred.append(model.ksvm_list[i].predict(Klog_list[i], return_float=True))
-    ysvm_pred = np.array(ysvm_pred).T
-    model.weights = logistic_reg(ysvm_pred, ylog, intercept=False)
-    print(model.weights)
-    return model.weights

@@ -62,5 +62,5 @@ def write_lambdas(path_to_gram, path_to_labels, ss, ks, ms, center, normalize, g
     return res
 
 
-write_lambdas("./gram_matrices/mismatch/", "./data/", [2], range(2, 11), range(2), True, True, [None], [-6, -4],
-              mode="a", n_iters=20, n_folds=5)
+#write_lambdas("./gram_matrices/mismatch/", "./data/", [2], range(2, 11), range(2), True, True, [None], [-6, -4],
+#             mode="a", n_iters=20, n_folds=5)

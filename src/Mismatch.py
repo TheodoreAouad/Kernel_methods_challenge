@@ -117,13 +117,13 @@ class MismatchTree():
     def compute_gram_matrix(self):
         leaves_list = self._get_leaves_list()
         self.embeddings = np.array(leaves_list, dtype=np.float32)[:, :, 0]
-        #print("Embedding space dimension : {}".format(len(leaves_list)))#.format(self.embeddings.shape[0]))
+        # print("Embedding space dimension : {}".format(len(leaves_list)))#.format(self.embeddings.shape[0]))
         self.gram_matrix = self.embeddings.T @ self.embeddings
-#        self.gram_matrix = np.zeros((len(leaves_list[0]), len(leaves_list[0])), dtype=np.float32)
-#        for i, ind in enumerate(leaves_list):
-#            if not(i%1000):
-#                print("{}/{}".format(i, len(leaves_list)))
-#            self.gram_matrix += ind@ind.T
+        #        self.gram_matrix = np.zeros((len(leaves_list[0]), len(leaves_list[0])), dtype=np.float32)
+        #        for i, ind in enumerate(leaves_list):
+        #            if not(i%1000):
+        #                print("{}/{}".format(i, len(leaves_list)))
+        #            self.gram_matrix += ind@ind.T
         return self.gram_matrix
 
     def _get_leaves_list(self):
@@ -171,4 +171,4 @@ def precalc_gram(path, k_list, m_list, sets):
 
 # %%
 
-precalc_gram("./gram_matrices/mismatch", range(11, 12), [0, 1], [0, 1, 2])
+precalc_gram("./gram_matrices/mismatch", range(10), [1], [0, 1, 2])

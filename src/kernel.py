@@ -5,17 +5,17 @@ import pandas as pd
 
 class kernel():
 
-    def __init__(self, s=0, k=3, m=0, center = True, gaussian_auto = False, gaussian = None,
-                 normalize_before_gaussian=False, normalize = True, Graam_matrix=None,
-                 path_to_gram="./gram_matrices/mismatch",path_to_labels="./data"):
+    def __init__(self, s=0, k=3, m=0, center=True, gaussian_auto=False, gaussian=None,
+                 normalize_before_gaussian=False, normalize=True, Graam_matrix=None,
+                 path_to_gram="./gram_matrices/mismatch", path_to_labels="./data"):
         self.s = s
-        self.labels = pd.read_csv(path_to_labels+"/Ytr{}.csv".format(s)).values[:, 1]*2-1
-        if Graam_matrix is not None :
+        self.labels = pd.read_csv(path_to_labels + "/Ytr{}.csv".format(s)).values[:, 1] * 2 - 1
+        if Graam_matrix is not None:
             self.gram_matrix = Graam_matrix
-        else :
-            gram_path = path_to_gram+"/mismatch{}k@{}m@{}.npz".format(s, k, m)
+        else:
+            gram_path = path_to_gram + "/mismatch{}k@{}m@{}.npz".format(s, k, m)
             self.gram_matrix = np.load(gram_path)['arr_0']
-            #Gaussian combinaison
+            # Gaussian combinaison
             if gaussian_auto:
                 dists = u.compute_squared_distance(self.gram_matrix)
                 self.gaussian = np.median(dists)
@@ -23,13 +23,12 @@ class kernel():
                 self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
             if gaussian:
                 self.gram_matrix = u.compute_squared_distance(self.gram_matrix)
-                self.gram_matrix = np.exp(-1/(2*gaussian) * self.gram_matrix)
-            #Centering the data in the embedding space if required
-            if center :
+                self.gram_matrix = np.exp(-1 / (2 * gaussian) * self.gram_matrix)
+            # Centering the data in the embedding space if required
+            if center:
                 self.gram_matrix = u.center_graam_matrix(self.gram_matrix)
-            if normalize :
+            if normalize:
                 self.gram_matrix = self.gram_matrix / np.mean(np.diag(self.gram_matrix))
-
 
     def get_train(self, indxs):
         return (self.gram_matrix[indxs][:, indxs], self.labels[indxs])
@@ -48,4 +47,4 @@ class kernel():
         """
         Returns the kernel products between the whole train set and the datapoints to predict for the kernel
         """
-        return (self.gram_matrix[2000:,:2000], None)
+        return (self.gram_matrix[2000:, :2000], None)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+
 sys.path.append('./src')
 
 from classifiers import KSVM, KSVM_pool
@@ -11,35 +12,38 @@ from utils import evaluateCV, evaluateCVpool
 from hp_opti import HPOptimizer
 from write_csv import create_sol_pool, write_csv
 
-#%%
-#s = 0
-#k = 8
-#m = 1
-#gamma = 2000
-#lam = 1e-5
-#
-#K = kernel(s, k, m, gaussian_auto = False)
-##print(K.gaussian)
-#ksvm = KSVM(lam, with_intercept = True)
-##optimizer = HPOptimizer(ksvm, K, bounds = [-6, 2])
-##optimizer.explore(9, "GridSearch")
-#%%
+# %%
+s = 0
+k = 8
+m = 1
+gamma = 2000
+lam = 1e-5
 
-#evaluateCV(ksvm, K, n_lim=2000, n_folds=10, n_reps=3, verbose=True)
+K = kernel(s, k, m, gaussian_auto=True)
 
 
-#%%
+# print(K.gaussian)
+# ksvm = KSVM(lam, with_intercept = True)
+# optimizer = HPOptimizer(ksvm, K, bounds = [-6, 2])
+# optimizer.explore(9, "GridSearch")
+# %%
+
+# evaluateCV(ksvm, K, n_lim=2000, n_folds=10, n_reps=5, verbose=True)
 
 
-def make_kernel_specs(s_list, k_list, m_list, gaussian = None, gaussian_auto = False):
+# %%
+
+
+def make_kernel_specs(s_list, k_list, m_list, gaussian=None, gaussian_auto=False):
     kernel_specs = []
     for s in s_list:
         for k in k_list:
             for m in m_list:
-                kernel_specs.append(dict( s = s,  k=k, m=m, gaussian=gaussian, gaussian_auto = gaussian_auto))
+                kernel_specs.append(dict(s=s, k=k, m=m, gaussian=gaussian, gaussian_auto=gaussian_auto))
     return kernel_specs
 
-def load_pooling_lists(kernel_specs, path_to_lambda, with_intercept = True):
+
+def load_pooling_lists(kernel_specs, path_to_lambda, with_intercept=True):
     models_lists = [[], [], []]
     kernels_lists = [[], [], []]
     lambda_df = pd.read_csv(path_to_lambda)
@@ -48,54 +52,81 @@ def load_pooling_lists(kernel_specs, path_to_lambda, with_intercept = True):
         k = spec["k"]
         m = spec["m"]
         if "gaussian" in spec.keys():
-            gaussian  = spec["gaussian"]
+            gaussian = spec["gaussian"]
         else:
             gaussian = None
         if "gaussian_auto" in spec.keys():
-            gaussian_auto  = spec["gaussian_auto"]
+            gaussian_auto = spec["gaussian_auto"]
         else:
             gaussian_auto = False
-        kernels_lists[s].append(kernel(s=s, k=k, m=m, center = True, gaussian_auto = gaussian_auto,
-                    gaussian = gaussian, normalize_before_gaussian=False, normalize = True))
-        if not(gaussian_auto):
-            lambda_row = lambda_df.loc[(lambda_df["dataset"] == s)&(lambda_df["k"] == k)&(lambda_df["m"] == m)]#&
+        kernels_lists[s].append(kernel(s=s, k=k, m=m, center=True, gaussian_auto=gaussian_auto,
+                                       gaussian=gaussian, normalize_before_gaussian=False, normalize=True))
+        if not (gaussian_auto):
+            lambda_row = lambda_df.loc[(lambda_df["dataset"] == s) & (lambda_df["k"] == k) & (lambda_df["m"] == m)]  # &
             # (lambda_df["gaussian"] == gaussian)]
             print(float(lambda_row["best_lambda"]))
-            models_lists[s].append(KSVM(float(lambda_row["best_lambda"])))
+            models_lists[s].append(KSVM(float(lambda_row["best_lambda"]), with_intercept=with_intercept))
         else:
-            models_lists[s].append(KSVM(1e-4, with_intercept = with_intercept))
+            models_lists[s].append(KSVM(1e-4, with_intercept=with_intercept))
 
-
-        #models_lists[s].append(KSVM(1e-4))
+        # models_lists[s].append(KSVM(1e-4))
     return models_lists, kernels_lists
 
+
 s_list = [0, 1, 2]
-k_list = [6, 7, 8, 9, 10]
-m_list = [0, 1]
+k_list = [7, 8, 9, 10]
+m_list = [1]
 
-kernel_specs = make_kernel_specs(s_list, k_list, m_list, gaussian = None, gaussian_auto = True)
-models_lists, kernels_lists = load_pooling_lists(kernel_specs, "./lambdas/lambdas.csv", with_intercept = False)
-#%%
-pool_models = [KSVM_pool(models_lists[0], fit_weights = True),
-               KSVM_pool(models_lists[1], fit_weights = True),
-               KSVM_pool(models_lists[2], fit_weights = True)]
+kernel_specs = make_kernel_specs(s_list, k_list, m_list, gaussian=None, gaussian_auto=False)
+kernel_specs += make_kernel_specs(s_list, k_list[2:], m_list, gaussian=None, gaussian_auto=True)
+
+# %%
+
+models_lists, kernels_lists = load_pooling_lists(kernel_specs, "./lambdas/lambdas.csv", with_intercept=False)
+
+# %%
+pool_models = [KSVM_pool(models_lists[0], fit_weights=False),
+               KSVM_pool(models_lists[1], fit_weights=False),
+               KSVM_pool(models_lists[2], fit_weights=False)]
+
+# %%
+
+from regression import logistic_reg
 
 
-#%%
+def fit_weights_pool(model, K_list, n_lim=2000, n_svm=1800):
+    svm_idxs = np.arange(n_svm)
+    log_idxs = np.arange(n_svm, n_lim)
+    Ksvm_list = [K.get_train(svm_idxs)[0] for K in K_list]
+    ysvm = K_list[0].get_train(svm_idxs)[1]
+    Klog_list = [K.get_valid(svm_idxs, log_idxs)[0] for K in K_list]
+    ylog = K_list[0].get_valid(svm_idxs, log_idxs)[1]
+    model.train(Ksvm_list, ysvm)
+
+    ysvm_pred = []
+    for i, Ksvm in enumerate(Ksvm_list):
+        ysvm_pred.append(model.ksvm_list[i].predict(Klog_list[i], return_float=False))
+    ysvm_pred = np.array(ysvm_pred).T
+    model.weights = logistic_reg(ysvm_pred, ylog, intercept=False)
+    print(model.weights)
+    return model.weights
+
+
+pool_models[0].weights = fit_weights_pool(pool_models[0], kernels_lists[0], n_lim=2000, n_svm=1800)
+pool_models[1].weights = fit_weights_pool(pool_models[1], kernels_lists[1], n_lim=2000, n_svm=1800)
+pool_models[2].weights = fit_weights_pool(pool_models[2], kernels_lists[2], n_lim=2000, n_svm=1800)
+
+# %%
 
 res = evaluateCVpool(pool_models[0], kernels_lists[0], n_lim=2000, n_folds=10, n_reps=3, verbose=True)
-#res = evaluateCVpool(pool_models[1], kernels_lists[1], n_lim=2000, n_folds=5, n_reps=3, verbose=True)
-#res = evaluateCVpool(pool_models[2], kernels_lists[2], n_lim=2000, n_folds=5, n_reps=3, verbose=True)
+# res = evaluateCVpool(pool_models[1], kernels_lists[1], n_lim=2000, n_folds=5, n_reps=3, verbose=True)
+# res = evaluateCVpool(pool_models[2], kernels_lists[2], n_lim=2000, n_folds=5, n_reps=3, verbose=True)
 
-#%%
-#pool_models = [model1, model2, model3]
-#kernels_lists = [K_list1, K_list2, K_list3]
-
-
-#y_pred = create_sol_pool(pool_models, kernels_lists)
-
-#write_csv(y_pred, "./res3.csv")
+# %%
+# pool_models = [model1, model2, model3]
+# kernels_lists = [K_list1, K_list2, K_list3]
 
 
+y_pred = create_sol_pool(pool_models, kernels_lists)
 
-
+write_csv(y_pred, "./res7.csv")

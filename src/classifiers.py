@@ -112,7 +112,7 @@ class KSVM_pool:
         if self.fit_weights:
             ytrain_pred = []
             for i, Ktrain in enumerate(Ktrain_list):
-                ytrain_pred.append(self.ksvm_list[i].predict(Ktrain, return_float=True))
+                ytrain_pred.append(self.ksvm_list[i].predict(Ktrain))
             ytrain_pred = np.array(ytrain_pred).T
             self.weights = logistic_reg(ytrain_pred, ytrain)
             print(self.weights.shape, self.weights)
